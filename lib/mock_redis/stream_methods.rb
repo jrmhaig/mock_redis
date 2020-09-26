@@ -82,6 +82,19 @@ class MockRedis
       result
     end
 
+    def xgroup(subcommand, key, group, id_or_consumer, mkstream: false)
+      if mkstream || data[key].is_a?(Stream)
+        with_stream_at(key) do |stream|
+          # TODO
+        end
+        'OK'
+      else
+        raise Redis::CommandError,
+        'ERR The XGROUP subcommand requires the key to exist. Note that for CREATE you may want ' \
+        'to use the MKSTREAM option to create an empty stream automatically.'
+      end
+    end
+
     private
 
     def with_stream_at(key, &blk)
