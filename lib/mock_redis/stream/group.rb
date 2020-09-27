@@ -6,7 +6,7 @@ class MockRedis
         @allocated = []
       end
 
-      def read(members, consumer, id, *opts_in)
+      def read(members, consumer, _id, *_opts_in)
         existing = assigned_for(consumer)
         return existing.map { |m| [m[0].to_s, m[1]] } if existing
 
@@ -27,11 +27,12 @@ class MockRedis
       end
 
       private
-      def assigned_for consumer
+
+      def assigned_for(consumer)
         @assigned[consumer]
       end
 
-      def assign_to consumer, items
+      def assign_to(consumer, items)
         @assigned[consumer] = items
       end
 

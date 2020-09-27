@@ -67,6 +67,13 @@ class MockRedis
       items
     end
 
+    def group(subcommand, _key, group, _id_or_consumer, mkstream: false)
+      case subcommand
+      when :create
+        @groups[group] ||= MockRedis::Stream::Group.new
+      end
+    end
+
     def readgroup(group_name, consumer, id, *opts_in)
       group = fetch_group(group_name)
       items = group.read(members, consumer, id, *opts_in)
@@ -92,8 +99,14 @@ class MockRedis
       opts_out
     end
 
-    def fetch_group name
-      @groups[name] ||= MockRedis::Stream::Group.new
+    def fetch_group(name)
+      if @groups[name].nil?
+        raise Redis::CommandError,
+          "NOGROUP No such key 'mock-redis-test:xreadgroup-key' or " \
+          "consumer group '#{name}' in XREADGROUP with GROUP option"
+      end
+
+      @groups[name]
     end
   end
 end

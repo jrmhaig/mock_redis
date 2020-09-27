@@ -85,7 +85,7 @@ class MockRedis
     def xgroup(subcommand, key, group, id_or_consumer, mkstream: false)
       if mkstream || data[key].is_a?(Stream)
         with_stream_at(key) do |stream|
-          # TODO
+          stream.group(subcommand, key, group, id_or_consumer, mkstream: mkstream)
         end
         'OK'
       else

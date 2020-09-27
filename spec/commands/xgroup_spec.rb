@@ -5,6 +5,7 @@ describe '#xgroup(subcommand, key, group, id_or_consumer = nil, mkstream: false)
   let(:group) { 'mock-redis-test:xgroup-group' }
 
   before :each do
+    @redises._gsub(/\d{3}-\d/, '...-.')
     Timecop.freeze
   end
 

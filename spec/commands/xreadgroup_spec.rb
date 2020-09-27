@@ -36,4 +36,15 @@ describe '#xreadgroup(group, consumer, keys, ids, count: nil, block: nil, noack:
     expect(@redises.xreadgroup(group, consumer, key, '0'))
       .to eq({ key => [['1234567891234-0', { 'key' => 'value' }]] })
   end
+
+  it 'does not read for an unknown group' do
+    @redises.xadd(key, { key: 'value' }, id: '1234567891234-0')
+    expect do
+      @redises.xreadgroup('unknown-group', consumer, key, '>')
+    end.to raise_error(
+      Redis::CommandError,
+      "NOGROUP No such key '#{key}' or consumer group 'unknown-group' " \
+      'in XREADGROUP with GROUP option'
+    )
+  end
 end
