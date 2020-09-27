@@ -95,6 +95,26 @@ class MockRedis
       end
     end
 
+    def xreadgroup(group, consumer, keys, ids, count: nil, block: nil, noack: nil)
+      args = []
+      keys = keys.is_a?(Array) ? keys : [keys]
+      ids = ids.is_a?(Array) ? ids : [ids]
+      result = {}
+      keys.each_with_index do |key, index|
+        with_stream_at(key) do |stream|
+          data = stream.readgroup(group, consumer, ids[index], *args)
+          result[key] = data unless data.empty?
+        end
+      end
+      result
+    end
+
+    def xack(key, group, *ids)
+      with_stream_at(key) do |stream|
+        stream.ack(group, *ids)
+      end
+    end
+
     private
 
     def with_stream_at(key, &blk)

@@ -2,6 +2,7 @@ require 'forwardable'
 require 'set'
 require 'date'
 require 'mock_redis/stream/id'
+require 'mock_redis/stream/group'
 
 class MockRedis
   class Stream
@@ -14,6 +15,7 @@ class MockRedis
 
     def initialize
       @members = Set.new
+      @groups = {}
       @last_id = nil
     end
 
@@ -65,6 +67,17 @@ class MockRedis
       items
     end
 
+    def readgroup(group_name, consumer, id, *opts_in)
+      group = fetch_group(group_name)
+      items = group.read(members, consumer, id, *opts_in)
+
+      items
+    end
+
+    def ack(group_name, *ids)
+      fetch_group(group_name).ack(*ids)
+    end
+
     def each
       members.each { |m| yield m }
     end
@@ -77,6 +90,10 @@ class MockRedis
       opts_in.each_slice(2).map { |pair| opts_out[pair[0].downcase] = pair[1] }
       raise Redis::CommandError, 'ERR syntax error' unless (opts_out.keys - permitted).empty?
       opts_out
+    end
+
+    def fetch_group name
+      @groups[name] ||= MockRedis::Stream::Group.new
     end
   end
 end
