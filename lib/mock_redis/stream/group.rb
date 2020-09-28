@@ -1,9 +1,9 @@
 class MockRedis
   class Stream
     class Group
-      def initialize
+      def initialize(allocated)
         @assigned = {}
-        @allocated = []
+        @allocated = allocated
       end
 
       def read(members, consumer, _id, *_opts_in)

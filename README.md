@@ -47,6 +47,7 @@ of supported methods:
 * Expirations: `expire`, `pexpire`, `ttl`, `pttl`, etc.
 * Transactions: `multi`, `exec`, `discard`
 * Futures
+* Streams (partial support): `xadd`, `xtrim`, `xlen`, `xrange`, `xrevrange`, `xread`, `xgroup` (in progress), `xreadgroup` (in progress), `xack` (in progress)
 
 ## Mostly-Supported Commands
 
@@ -98,6 +99,8 @@ please submit a pull request with your (tested!) implementation.
 
 * `#config(:get|:set|:resetstat)` isn't done. They can just return
   canned values.
+* Some Streams commands are not yet supported: `xpending`, `xclaim`, `xinfo`, `xtrim`, `xdel`,
+
 
 ## Running tests
 

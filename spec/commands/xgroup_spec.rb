@@ -35,6 +35,31 @@ describe '#xgroup(subcommand, key, group, id_or_consumer = nil, mkstream: false)
       expect(@redises.xgroup(:create, key, group, '$', mkstream: true)).to eq 'OK'
       @redises.del(key)
     end
+
+    it 'raises an error if the group already exists' do
+      @redises.xgroup(:create, key, group, '$', mkstream: true)
+      expect do
+        @redises.xgroup(:create, key, group, '$', mkstream: true)
+      end.to raise_error(
+        Redis::CommandError,
+        'BUSYGROUP Consumer Group name already exists'
+      )
+    end
+
+    it 'sets all items as delivered with id $' do
+      @redises.xadd(key, { key: 'first value' }, id: '1234567891234-0')
+      @redises.xgroup(:create, key, group, '$', mkstream: true)
+      expect(@redises.xreadgroup(group, 'consumer', key, '>')).to eq({})
+    end
+
+    it 'sets items at or before a given id as delivered' do
+      @redises.xadd(key, { key: 'first value' }, id: '1234567891234-0')
+      @redises.xadd(key, { key: 'second value' }, id: '1234567891235-0')
+      @redises.xadd(key, { key: 'third value' }, id: '1234567891235-1')
+      @redises.xgroup(:create, key, group, '1234567891235-0', mkstream: true)
+      expect(@redises.xreadgroup(group, 'consumer', key, '>'))
+        .to eq({ key => [['1234567891235-1', { 'key' => 'third value' }]] })
+    end
   end
 
   context 'subcommand :setid' do

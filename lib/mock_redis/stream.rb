@@ -13,7 +13,8 @@ class MockRedis
 
     def_delegators :members, :empty?
 
-    def initialize
+    def initialize(key)
+      @key = key
       @members = Set.new
       @groups = {}
       @last_id = nil
@@ -67,10 +68,21 @@ class MockRedis
       items
     end
 
-    def group(subcommand, _key, group, _id_or_consumer, mkstream: false)
+    def group(subcommand, group, id_or_consumer)
       case subcommand
       when :create
-        @groups[group] ||= MockRedis::Stream::Group.new
+        if @groups[group]
+          raise Redis::CommandError,
+            'BUSYGROUP Consumer Group name already exists'
+        else
+          allocated = if id_or_consumer == '$'
+                        members
+                      else
+                        stream_id = MockRedis::Stream::Id.new(id_or_consumer)
+                        members.select { |m| stream_id >= m[0] }
+                      end.map(&:first)
+          @groups[group] = MockRedis::Stream::Group.new(allocated)
+        end
       end
     end
 
@@ -102,8 +114,8 @@ class MockRedis
     def fetch_group(name)
       if @groups[name].nil?
         raise Redis::CommandError,
-          "NOGROUP No such key 'mock-redis-test:xreadgroup-key' or " \
-          "consumer group '#{name}' in XREADGROUP with GROUP option"
+          "NOGROUP No such key '#{@key}' or consumer group '#{name}' " \
+          'in XREADGROUP with GROUP option'
       end
 
       @groups[name]
