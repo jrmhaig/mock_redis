@@ -63,6 +63,25 @@ describe '#xgroup(subcommand, key, group, id_or_consumer = nil, mkstream: false)
   end
 
   context 'subcommand :setid' do
+    it 'sets the last id to be marked as delivered' do
+      @redises.xadd(key, { key: 'first value' }, id: '1234567891234-0')
+      @redises.xadd(key, { key: 'second value' }, id: '1234567891234-1')
+      @redises.xgroup(:create, key, group, '1234567891235-1', mkstream: true)
+
+      @redises.xgroup(:setid, key, group, '1234567891234-0')
+      expect(@redises.xreadgroup(group, 'consumer', key, '>'))
+        .to eq({ key => [['1234567891234-1', { 'key' => 'second value' }]] })
+    end
+
+    it 'raises an error if the group does not exist' do
+      expect do
+        @redises.xgroup(:setid, key, group, '1234567891234-0')
+      end.to raise_error(
+        Redis::CommandError,
+        'ERR The XGROUP subcommand requires the key to exist. Note that for CREATE you may want ' \
+        'to use the MKSTREAM option to create an empty stream automatically.'
+      )
+    end
   end
 
   context 'subcommand :destroy' do

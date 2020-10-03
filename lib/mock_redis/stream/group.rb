@@ -26,6 +26,10 @@ class MockRedis
         matching_ids.count
       end
 
+      def setid(id)
+        @allocated.reject! { |m| m > id }
+      end
+
       private
 
       def assigned_for(consumer)

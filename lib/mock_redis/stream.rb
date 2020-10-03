@@ -83,6 +83,8 @@ class MockRedis
                       end.map(&:first)
           @groups[group] = MockRedis::Stream::Group.new(allocated)
         end
+      when :setid
+        fetch_group(group).setid(MockRedis::Stream::Id.new(id_or_consumer))
       end
     end
 
